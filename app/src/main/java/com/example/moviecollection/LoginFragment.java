@@ -51,6 +51,9 @@ public class LoginFragment extends Fragment {
 
             // Проверка авторизации
             if (dbHelper.validateUser(username, password)) {
+
+                // Сохраняем логин в SharedPreferences
+                SessionManager.getInstance(requireContext()).login(username);
                 Toast.makeText(getContext(), "Успешный вход", Toast.LENGTH_SHORT).show();
 
                 // Запуск основной активности после успешного входа

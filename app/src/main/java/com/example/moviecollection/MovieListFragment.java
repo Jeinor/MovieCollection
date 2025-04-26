@@ -1,162 +1,84 @@
 package com.example.moviecollection;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-import androidx.navigation.fragment.NavHostFragment;
-
 import com.example.moviecollection.databinding.FragmentMovieListBinding;
-
 import java.util.Arrays;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MovieListFragment extends Fragment {
 
-    // ViewBinding для работы с разметкой fragment_movie_list.xml
     private FragmentMovieListBinding binding;
+    private MovieAdapter adapter;                     // без инициализации
+    private final KinopoiskApi api =
+            ApiClient.getRetrofitInstance().create(KinopoiskApi.class);
 
-    // Адаптер для отображения списка фильмов в RecyclerView
-    private MovieAdapter adapter = new MovieAdapter();
-
-    // Интерфейс для запросов к API, создаётся через Retrofit
-    private final KinopoiskApi api = ApiClient.getRetrofitInstance().create(KinopoiskApi.class);
-
+    // life-cycle
     @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState
-    ) {
-        // Привязываем макет к binding и возвращаем корневой View
-        binding = FragmentMovieListBinding.inflate(inflater, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup c, Bundle s) {
+        binding = FragmentMovieListBinding.inflate(inflater, c, false);
         return binding.getRoot();
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        // Настройка RecyclerView
+    public void onViewCreated(@NonNull View v, @Nullable Bundle s) {
+        // создаём адаптер, когда есть Context
+        adapter = new MovieAdapter(requireContext());
+
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.recyclerView.setAdapter(adapter);
 
-        // Загружаем популярные фильмы при запуске экрана
-        loadPopularMovies();
+        loadPopular();   // дефолтная загрузка
 
-        // Отслеживаем изменения текста в поле поиска
         binding.editSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void afterTextChanged(Editable s) {
-                String query = s.toString().trim();
-
-                // Показываем кнопку очистки, если поле не пустое
-                binding.buttonClearSearch.setVisibility(query.isEmpty() ? View.GONE : View.VISIBLE);
-
-                if (query.isEmpty()) {
-                    // Если поле пустое — возвращаем популярные фильмы
-                    loadPopularMovies();
-                } else {
-                    // Иначе — выполняем поиск по названию
-                    searchMovies(query);
-                }
+            @Override public void afterTextChanged(Editable e) {
+                String q = e.toString().trim();
+                binding.buttonClearSearch.setVisibility(q.isEmpty() ? View.GONE : View.VISIBLE);
+                if (q.isEmpty()) loadPopular(); else search(q);
             }
-
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void beforeTextChanged(CharSequence s,int st,int c,int a) {}
+            @Override public void onTextChanged(CharSequence s,int st,int b,int c)   {}
         });
 
-        // Очистка поля поиска и возврат к популярным фильмам
-        binding.buttonClearSearch.setOnClickListener(v -> {
+        binding.buttonClearSearch.setOnClickListener(v1 -> {
             binding.editSearch.setText("");
             binding.editSearch.clearFocus();
-            loadPopularMovies();
-            binding.buttonClearSearch.setVisibility(View.GONE);
+            loadPopular();
         });
     }
 
-    /**
-     * Загружает популярные фильмы из API.
-     */
-    private void loadPopularMovies() {
-        // Список полей, которые мы хотим получить от API
-        List<String> fields = Arrays.asList("id", "name", "alternativeName", "year", "poster", "rating");
-
-        // Выполняем запрос на популярные фильмы
-        api.getPopularMovies(
-                1,              // Страница
-                20,             // Кол-во фильмов
-                fields,         // Нужные поля
-                "rating.filmCritics", // Сортировка по рейтингу критиков
-                -1              // Тип сортировки: -1 = убывание
-        ).enqueue(new Callback<MovieResponse>() {
-            @Override
-            public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    // Отображаем полученные фильмы
-                    adapter.setMovieList(response.body().getDocs());
-                } else {
-                    Log.e("API", "Ошибка загрузки: код " + response.code());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MovieResponse> call, Throwable t) {
-                Log.e("API", "Ошибка сети: " + t.getMessage());
-            }
-        });
+    // загрузки из API
+    private void loadPopular() {
+        List<String> fields = Arrays.asList("id","name","alternativeName","year","poster","rating");
+        api.getPopularMovies(1,20,fields,"rating.filmCritics",-1)
+                .enqueue(new Callback<MovieResponse>() {
+                    @Override public void onResponse(Call<MovieResponse> c, Response<MovieResponse> r) {
+                        adapter.setMovieList(r.isSuccessful() && r.body()!=null ? r.body().getDocs() : Arrays.asList());
+                    }
+                    @Override public void onFailure(Call<MovieResponse> c, Throwable t) { /* ignore */ }
+                });
     }
 
-    /**
-     * Выполняет поиск фильмов по названию.
-     * @param query строка поиска
-     */
-    private void searchMovies(String query) {
-        // Выполняем GET-запрос с параметром name
-        api.searchMovies(
-                query,
-                20,
-                1
-        ).enqueue(new Callback<MovieResponse>() {
-
-            @Override
-            public void onResponse(Call<MovieResponse> call, Response<MovieResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    adapter.setMovieList(response.body().getDocs());
-                } else {
-                    Toast.makeText(getContext(), "Фильмы не найдены", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MovieResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "Ошибка: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void search(String q) {
+        api.searchMovies(q,20,1)
+                .enqueue(new Callback<MovieResponse>() {
+                    @Override public void onResponse(Call<MovieResponse> c, Response<MovieResponse> r) {
+                        adapter.setMovieList(r.isSuccessful() && r.body()!=null ? r.body().getDocs() : Arrays.asList());
+                    }
+                    @Override public void onFailure(Call<MovieResponse> c, Throwable t) { /* ignore */ }
+                });
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        binding = null;
-    }
-
-    // Геттер/сеттер для адаптера, если понадобится снаружи
-    public MovieAdapter getAdapter() {
-        return adapter;
-    }
-
-    public void setAdapter(MovieAdapter adapter) {
-        this.adapter = adapter;
-    }
+    @Override public void onDestroyView() { super.onDestroyView(); binding = null; }
 }

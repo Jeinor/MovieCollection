@@ -15,7 +15,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "KINOPOISK_API_KEY", "\"Z1J36WW-01X4NF1-JB7JX4P-TSRESRX\"")
+        buildConfigField("String", "KINOPOISK_API_KEY", "\"DNZD1ZY-9D240R1-QC4ANHQ-P0EN5CT\"")
     }
 
     buildFeatures {

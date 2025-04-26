@@ -11,6 +11,13 @@ public class MovieDetail {
 
     private String name; // Название фильма
 
+    @SerializedName("id")
+    private int id;
+
+    public int getId() {
+        return id;
+    }
+
     @SerializedName("alternativeName")
     private String alternativeName; // Альтернативное (оригинальное) название
 
@@ -29,9 +36,13 @@ public class MovieDetail {
     public List<Genre> getGenres() { return genres; }
 
     // Вложенный класс для постера
-    public static class Poster {
-        private String url; // URL постера
-        public String getUrl() { return url; }
+    public class Poster {
+        @SerializedName("url")
+        private String url;
+
+        public String getUrl() {
+            return url;
+        }
     }
 
     // Вложенный класс для рейтинга

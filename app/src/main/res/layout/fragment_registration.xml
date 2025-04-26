@@ -6,7 +6,6 @@
     android:padding="24dp"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@android:color/white"
     tools:context=".RegistrationFragment">
 
     <!-- Заголовок -->

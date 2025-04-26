@@ -24,4 +24,20 @@
             android:id="@+id/action_movieDetailFragment_to_movieListFragment"
             app:destination="@id/MovieListFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/planToWatchFragment"
+        android:name="com.example.moviecollection.PlanToWatchFragment"
+        android:label="Буду смотреть"
+        tools:layout="@layout/fragment_plan_to_watch" />
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.moviecollection.ProfileFragment"
+        android:label="Профиль"
+        tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/watchedFragment"
+        android:name="com.example.moviecollection.WatchedFragment"
+        android:label="Просмотренные"
+        tools:layout="@layout/fragment_watched" />
 </navigation>

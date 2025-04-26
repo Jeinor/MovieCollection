@@ -8,6 +8,14 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Movie {
 
+    public Movie(int id, String name, String alternativeName, int year, Poster poster) {
+        this.id = id;
+        this.name = name;
+        this.alternativeName = alternativeName;
+        this.year = year;
+        this.poster = poster;
+    }
+
     @SerializedName("id")
     private int id; // Уникальный ID фильма
 
@@ -28,7 +36,12 @@ public class Movie {
      */
     public static class Poster {
         @SerializedName("previewUrl")
-        private String previewUrl; // URL миниатюры постера
+        private String previewUrl;
+
+        // Конструктор, принимающий URL постера
+        public Poster(String previewUrl) {
+            this.previewUrl = previewUrl;
+        }
 
         public String getPreviewUrl() {
             return previewUrl;

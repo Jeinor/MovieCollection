@@ -11,6 +11,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.example.moviecollection.databinding.ActivityMainBinding;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         // Связываем ActionBar с NavController
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+
+        // Настройка BottomNavigationView с NavController
+        BottomNavigationView bottomNavigationView = binding.bottomNavigation;
+        NavigationUI.setupWithNavController(bottomNavigationView, navController);
     }
 
     @Override
